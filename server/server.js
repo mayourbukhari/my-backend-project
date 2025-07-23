@@ -71,6 +71,7 @@ app.use(cors({
       'http://localhost:3001', // For mobile app
       'http://localhost:5000', // In case of proxy issues
       'http://127.0.0.1:5000', // Alternative localhost for server
+      'https://rendered.vercel.app', // Your Vercel frontend
       'https://yourproductiondomain.com'
     ];
     
@@ -162,13 +163,43 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../client/build')));
-  
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+// Root endpoint for API-only deployment
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Artist Marketplace API Server',
+    status: 'Running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      artworks: '/api/artworks',
+      orders: '/api/orders',
+      artists: '/api/artists',
+      users: '/api/users',
+      commissions: '/api/commissions',
+      mentorships: '/api/mentorships',
+      nfts: '/api/nfts',
+      recommendations: '/api/recommendations',
+      verification: '/api/verification'
+    }
   });
+});
+
+// Serve static assets in production (only if client build exists)
+if (process.env.NODE_ENV === 'production') {
+  const clientBuildPath = path.join(__dirname, '../client/build');
+  const fs = require('fs');
+  
+  // Check if client build directory exists
+  if (fs.existsSync(clientBuildPath)) {
+    app.use(express.static(clientBuildPath));
+    
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
+    });
+  } else {
+    console.log('Client build directory not found. Running as API-only server.');
+  }
 }
 
 // Error handling middleware
