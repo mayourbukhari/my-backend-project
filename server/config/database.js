@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const dbConfig = {
-    url: 'mongodb://localhost:27017/mydatabase', // Replace with your database URL
+    url: process.env.MONGODB_URI ,
     options: {
         useNewUrlParser: true,
         useUnifiedTopology: true,
